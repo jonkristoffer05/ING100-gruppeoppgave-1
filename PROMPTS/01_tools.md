@@ -42,16 +42,14 @@ grenseverdier, serieutvikling) – hold da samme mønster:
   deling på null, matriser med feil dimensjoner, singulære matriser og
   ugyldige komplekse uttrykk skal håndteres eksplisitt. Det inkluderer også
   tomme uttrykk og ugyldige parameterverdier for komplekse tall.
+
 - Skal feil kastes som exceptions, eller returneres som del av dict
-  (f.eks. `{"feil": "..."}`)? Funksjonene skal kaste `ValueError` med en
-  kort og forståelig norsk feilmelding; API-laget skal fange feilen slik at
-  brukeren ikke får stack trace.
+  (f.eks. `{"feil": "..."}`)? Vi bruker exceptions ved feil. Funksjonene kaster ValueError med en norsk forklaring. Dette gjør at llm_client.py og main.py kan fange feilen og vise den ærlig til brukeren.
+
 - Hvor «smart» skal parsing av matteuttrykk være? (F.eks.: skal `sin^-1(x)`
   tolkes som invers funksjon eller som potens? Dette er et av
   «aha-punktene» i `OPPGAVE.md` – bestem en tolkning og vær eksplisitt om
-  den i koden/docstringen.) Parseren skal støtte `^`, `3.5x` og `2(x+1)` som
-  implisitt multiplikasjon, men aldri bruke `eval`. Tvetydig notasjon som
-  `sin^-1(x)` skal ikke tolkes automatisk; brukeren må presisere betydningen.
+  den i koden/docstringen.) Parseren støtter blant annet +, -, *, /, potenser, implisitt multiplikasjon, sin, cos, tan, exp, sqrt, log, komplekse tall og vanlige symboler. Vi tolker sin^-1(x), cos^-1(x) og tan^-1(x) som henholdsvis arcsin(x), arccos(x) og arctan(x). Denne tolkningen er gjort eksplisitt i parseren.
 - Alle vellykkede verktøykall skal returnere `{"resultat": str, "latex": str}`.
 
 ## Ferdig prompt å lime inn (etter at dere har fylt inn over)
@@ -79,18 +77,11 @@ Skriv en kort forklarende docstring per funksjon, på norsk.
 
 ## Kvalitetssjekk før du limer inn koden
 
-<<<<<<< HEAD
-- [ ] Alle 7 funksjonsnavn og parametere er UENDRET fra skjelettet.
-- [ ] Ingen `NotImplementedError` igjen.
-- [ ] `TOOL_DEFINITIONS` finnes og er en liste.
-- [ ] Dere forstår hvordan feil håndteres, og det stemmer med gruppens valg
-  over.
-- [ ] Kjør `python scripts/selftest.py` – tools-sjekkene bør nå vise ✅.
 =======
-- [x] Alle 6 funksjonsnavn og parametere er UENDRET fra skjelettet.
+- [x] Alle 7 funksjonsnavn og parametere er UENDRET fra skjelettet.
 - [x] Ingen `NotImplementedError` igjen.
 - [x] `TOOL_DEFINITIONS` finnes og er en liste.
 - [x] Dere forstår hvordan feil håndteres, og det stemmer med det dere
       bestemte i «FYLL INN SELV» over.
 - [x] Kjør `python scripts/selftest.py` – tools-sjekkene bør nå vise ✅.
->>>>>>> 68a48b2 (Legg til oppgavebeskrivelse)
+
