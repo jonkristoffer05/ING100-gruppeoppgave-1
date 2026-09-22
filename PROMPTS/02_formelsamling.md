@@ -60,7 +60,7 @@ Inkluder også disse spesifikke formlene fra pensum:
 
 ## Kvalitetssjekk før du limer inn koden
 
-- [ ] Alle oppføringer har `navn`, `formel`, `referanse` – ingen mangler felt.
+- [] Alle oppføringer har `navn`, `formel`, `referanse` – ingen mangler felt.
 - [ ] Alle oppføringer har en kort og konkret `bruk`-tekst som hjelper modellen
   å velge formelen og forklare hvorfor den brukes.
 - [ ] LaTeX-formlene ser riktige ut (test dem gjerne på https://katex.org/ eller i frontend).

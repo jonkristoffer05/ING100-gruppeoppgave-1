@@ -34,7 +34,7 @@ Skriv `riktig/validert/tokens` i hver resultatkolonne, for eksempel
 
 | # | Oppgave | Modell A + tools | Modell A uten tools | Modell B + tools | Modell B uten tools | Kommentar |
 |---|---------|------------------|----------------------|------------------|----------------------|-----------|
-| 1 |         |                  |                      |                  |                      |           |
+| 1 | Deriver: f(x) = (x^2 + 1)·si(x)        |                  |                      |                  |                      |           |
 | 2 |         |                  |                      |                  |                      |           |
 | 3 |         |                  |                      |                  |                      |           |
 | 4 |         |                  |                      |                  |                      |           |
