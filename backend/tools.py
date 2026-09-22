@@ -1,5 +1,6 @@
 """Deterministiske SymPy-verktøy. Modellen forklarer; SymPy regner."""
 from __future__ import annotations
+from tokenize import TokenError
 import sympy as sp
 from sympy.parsing.sympy_parser import parse_expr, standard_transformations, implicit_multiplication_application
 
@@ -11,12 +12,15 @@ def _parse(text: str, extra=None):
         raise ValueError("Uttrykket kan ikke være tomt.")
     text = text.replace("sin^-1", "asin").replace("cos^-1", "acos").replace("tan^-1", "atan").replace("j", "I")
     local = {"E": sp.E, "I": sp.I, "pi": sp.pi, "sin": sp.sin, "cos": sp.cos, "tan": sp.tan, "exp": sp.exp, "sqrt": sp.sqrt, "log": sp.log, "asin": sp.asin, "acos": sp.acos, "atan": sp.atan}
-    for name in ("x", "y", "t", "z", "a", "b", "c", "n", "C1", "C2"):
+    for name in ("x", "y", "t", "z", "a", "b", "c", "n", "theta", "C1", "C2"):
         local[name] = sp.Symbol(name, real=True)
     local["y"] = sp.Function("y")
     if extra:
         local.update(extra)
-    return parse_expr(text, local_dict=local, transformations=_TRANSFORMS)
+    try:
+        return parse_expr(text, local_dict=local, transformations=_TRANSFORMS)
+    except (SyntaxError, TokenError, TypeError, ValueError) as exc:
+        raise ValueError(f"Ugyldig matematisk uttrykk: {text}") from exc
 
 def _result(value):
     if isinstance(value, sp.MatrixBase):
@@ -57,26 +61,71 @@ def solve_ode(ligning: str) -> dict:
     return _result(sp.dsolve(equation, y(x)))
 
 def matrix_op(operasjon: str, matrise: list) -> dict:
-    matrix = sp.Matrix(matrise)
-    operation = operasjon.lower().strip()
-    if operation == "determinant": result = matrix.det()
-    elif operation == "invers":
-        if matrix.det() == 0: raise ValueError("Matrisen er singulær og har ingen invers.")
-        result = matrix.inv()
-    elif operation in ("eigenvalues", "egenverdier"): result = matrix.eigenvals()
-    elif operation == "trace": result = matrix.trace()
-    else: raise ValueError("Støttede matriseoperasjoner: determinant, invers, eigenvalues, trace.")
+    operation = str(operasjon).lower().strip()
+    if operation not in ("determinant", "invers", "eigenvalues", "egenverdier", "solve_ax_b"):
+        raise ValueError("Støttede matriseoperasjoner: determinant, invers, egenverdier, solve_ax_b.")
+    try:
+        if operation == "solve_ax_b":
+            if not isinstance(matrise, (list, tuple)) or len(matrise) != 2:
+                raise ValueError("solve_ax_b krever matrise på formen [A, b].")
+            matrix = sp.Matrix(matrise[0])
+            vector = sp.Matrix(matrise[1])
+            if matrix.rows != matrix.cols:
+                raise ValueError("A i solve_ax_b må være en kvadratisk matrise.")
+            if vector.cols != 1 or vector.rows != matrix.rows:
+                raise ValueError("b i solve_ax_b må være en vektor med samme antall rader som A.")
+            if matrix.det() == 0:
+                raise ValueError("A er singulær, så Ax=b har ingen entydig løsning.")
+            result = matrix.LUsolve(vector)
+        else:
+            matrix = sp.Matrix(matrise)
+            if matrix.rows != matrix.cols:
+                raise ValueError("Matriseoperasjonen krever en kvadratisk matrise.")
+            if operation == "determinant":
+                result = matrix.det()
+            elif operation == "invers":
+                if matrix.det() == 0:
+                    raise ValueError("Matrisen er singulær og har ingen invers.")
+                result = matrix.inv()
+            else:
+                result = list(matrix.eigenvals().keys())
+    except ValueError:
+        raise
+    except (TypeError, IndexError, sp.ShapeError) as exc:
+        raise ValueError("Ugyldig matriseformat. Bruk en rektangulær matrise med tall eller uttrykk.") from exc
     return _result(result)
 
 def complex_op(operasjon: str, tall: str) -> dict:
-    operation = operasjon.lower().strip()
-    value = _parse(tall)
+    operation = str(operasjon).lower().strip()
+    if operation not in ("polar", "power", "root", "euler"):
+        raise ValueError("Støttede kompleksoperasjoner: polar, power, root, euler.")
     if operation == "polar":
+        value = _parse(tall)
+        if value == 0:
+            raise ValueError("Argumentet til 0 er ikke definert i polarform.")
         return {"resultat": f"r = {sp.Abs(value)}, theta = {sp.arg(value)}", "latex": rf"r={sp.latex(sp.Abs(value))},\;\theta={sp.latex(sp.arg(value))}"}
-    if operation == "power": return _result(sp.expand(value ** 2))
-    if operation == "root": return _result(sp.solve(sp.Symbol("z") ** 2 - value, sp.Symbol("z")))
-    if operation == "euler": return _result(sp.exp(sp.I * sp.Symbol("theta", real=True)))
-    raise ValueError("Støttede kompleksoperasjoner: polar, power, root, euler.")
+    if operation == "power":
+        return _result(sp.expand_complex(_parse(tall)))
+    if operation == "root":
+        parts = [part.strip() for part in str(tall).split(";")]
+        if len(parts) > 2 or not parts[0]:
+            raise ValueError("root krever 'tall' eller 'tall;grad', for eksempel '1;3'.")
+        value = _parse(parts[0])
+        degree = 2
+        if len(parts) == 2:
+            try:
+                degree = int(parts[1])
+            except ValueError as exc:
+                raise ValueError("Graden i root må være et positivt heltall.") from exc
+        if degree < 1:
+            raise ValueError("Graden i root må være et positivt heltall.")
+        variable = sp.Symbol("z")
+        try:
+            roots = sp.solve(variable ** degree - value, variable)
+        except (NotImplementedError, ValueError, TypeError) as exc:
+            raise ValueError("Klarte ikke å beregne de komplekse røttene.") from exc
+        return _result(roots)
+    return _result(sp.expand_complex(sp.exp(sp.I * _parse(tall))))
 
 TOOL_DEFINITIONS = []
 for name, description, properties, required in [
@@ -84,7 +133,7 @@ for name, description, properties, required in [
     ("integrate", "Integrer et uttrykk.", {"uttrykk": {"type": "string"}, "variabel": {"type": "string"}}, ["uttrykk"]),
     ("solve_equation", "Løs en ligning.", {"ligning": {"type": "string"}, "variabel": {"type": "string"}}, ["ligning"]),
     ("solve_ode", "Løs en differensialligning.", {"ligning": {"type": "string"}}, ["ligning"]),
-    ("matrix_op", "Utfør en matriseoperasjon.", {"operasjon": {"type": "string"}, "matrise": {"type": "array", "items": {"type": "array", "items": {"type": "number"}}}}, ["operasjon", "matrise"]),
-    ("complex_op", "Utfør en kompleks tall-operasjon.", {"operasjon": {"type": "string"}, "tall": {"type": "string"}}, ["operasjon", "tall"]),
+    ("matrix_op", "Støtter determinant, invers, egenverdier og solve_ax_b. For solve_ax_b skal matrise være [A, b], for eksempel [[[2, 1], [1, -1]], [5, 1]], for å løse Ax=b.", {"operasjon": {"type": "string", "enum": ["determinant", "invers", "egenverdier", "solve_ax_b"]}, "matrise": {"oneOf": [{"type": "array", "items": {"type": "array", "items": {"type": "number"}}}, {"type": "array", "prefixItems": [{"type": "array", "items": {"type": "array", "items": {"type": "number"}}}, {"type": "array", "items": {"type": "number"}}], "minItems": 2, "maxItems": 2}]}}, ["operasjon", "matrise"]),
+    ("complex_op", "Støtter polar, power, root og euler. tall er et komplekst uttrykk; power forenkler hele uttrykket, root bruker 'tall;grad' eller grad 2 som standard, og euler tolker tall som vinkelen theta i e^(i*theta).", {"operasjon": {"type": "string", "enum": ["polar", "power", "root", "euler"]}, "tall": {"type": "string"}}, ["operasjon", "tall"]),
 ]:
     TOOL_DEFINITIONS.append({"type": "function", "function": {"name": name, "description": description, "parameters": {"type": "object", "properties": properties, "required": required}}})
