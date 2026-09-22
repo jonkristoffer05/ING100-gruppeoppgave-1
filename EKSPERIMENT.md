@@ -34,16 +34,16 @@ Skriv `riktig/validert/tokens` i hver resultatkolonne, for eksempel
 
 | # | Oppgave | Modell A + tools | Modell A uten tools | Modell B + tools | Modell B uten tools | Kommentar |
 |---|---------|------------------|----------------------|------------------|----------------------|-----------|
-| 1 | Deriver: f(x) = (x^2 + 1)·si(x)        |                  |                      |                  |                      |           |
-| 2 |   Deriver: f(x) = sin(3x^2)      |                  |                      |                  |                      |           |
-| 3 |         |                  |                      |                  |                      |           |
-| 4 |         |                  |                      |                  |                      |           |
-| 5 |         |                  |                      |                  |                      |           |
-| 6 |         |                  |                      |                  |                      |           |
-| 7 |         |                  |                      |                  |                      |           |
-| 8 |         |                  |                      |                  |                      |           |
-| 9 |         |                  |                      |                  |                      |           |
-| 10 |        |                  |                      |                  |                      |           |
+| 1 |Deriver: f(x) = (x^2 + 1)·si(x)        |                  |                      |                  |                      |           |
+| 2 |Deriver: f(x) = sin(3x^2)      |                  |                      |                  |                      |           |
+| 3 |Integrer: ∫(3x^2 + 2x - 1) dx        |                  |                      |                  |                      |           |
+| 4 |Integrer: ∫ dx/(x+2)        |                  |                      |                  |                      |           |
+| 5 |Løs ligningssystemet: 2x + 3y = 7, x - y = 1         |                  |                      |                  |                      |           |
+| 6 |Løs differensialligningen: y'' + 2y = 0        |                  |                      |                  |                      |           |
+| 7 |Karakteristisk ligning for y'' - 3y' + 2y = 0        |                  |                      |                  |                      |           |
+| 8 |	Regn ut Eulers formel for e^(iπ/2)      |                  |                      |                  |                      |           |
+| 9 |	Skriv 1 + i i polarform       |                  |                      |                  |                      |           |
+| 10 |Løs matriseproblem: A x = b med A = [[1, 1/2, 1/3],[1/2,1/3,1/4],[1/3,1/4,1/5]] og b = [1,1,1]        |                  |                      |                  |                      |           |
 
 ## Kostnadsberegning
 
