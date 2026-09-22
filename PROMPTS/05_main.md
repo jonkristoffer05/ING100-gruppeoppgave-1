@@ -28,15 +28,23 @@ verktøy. Den bør derfor være liten og tydelig:
 Tenk gjerne slik: `llm_client` lager forslaget, `validator` sjekker det, og
 `main.py` bestemmer hva brukeren faktisk får se.
 
-## [FYLL INN SELV] – ta stilling til dette FØR dere sender prompten
+## Gruppens valg
 
 - Hva skal skje hvis `llm_client.solve_task` kaster en feil (f.eks. API
   nede, ugyldig token, tom kvote)? Skal brukeren se en teknisk feilmelding,
-  eller en forenklet én? Bestem og skriv ned:
-  `____________________________________________`
+  eller en forenklet én? Brukeren skal få en kort, forståelig norsk
+  feilmelding, ikke teknisk stack trace, API-nøkkel eller intern
+  leverandørinformasjon. Feil skal logges på serversiden uten å logge
+  API-nøkkelen.
 - Hvilken HTTP-statuskode skal brukes ved ulike feil (f.eks. 400 for dårlig
-  input, 502/503 for at modellen ikke svarer)? Bestem selv:
-  `____________________________________________`
+  input, 502/503 for at modellen ikke svarer)? HTTP 400 brukes ved tom eller
+  ugyldig input. HTTP 502 brukes når språkmodellens API returnerer en ugyldig
+  respons eller ikke kan nås. HTTP 503 brukes ved midlertidig utilgjengelig
+  tjeneste, kvoteproblem eller rate limiting. HTTP 500 brukes kun ved en
+  uventet intern feil.
+- Responsen skal så langt som mulig beholde den stabile strukturen frontend
+  forventer. Validatorfeil skal ikke gjøre et matematisk svar validert; appen
+  skal vise svaret med `validert=False` og en ærlig forklaring.
 
 ## Praktisk hint
 
@@ -53,8 +61,17 @@ Implementer backend/main.py sitt POST /solve-endepunkt slik at det:
 2. Kaller validator.validate(...) med problemet og svaret fra steg 1.
 3. Returnerer JSON med feltene: svar, steg, formler_brukt, validert,
    tokens_brukt, estimert_kostnad.
-4. Håndterer feil slik: [LIM INN DERES SVAR FRA "FYLL INN SELV" OVER]
+4. Håndterer feil slik: vis en kort, forståelig norsk feilmelding uten teknisk
+  stack trace, API-nøkkel eller intern leverandørinformasjon. Logg feil på
+  serversiden uten å logge API-nøkkelen. Bruk HTTP 400 ved tom eller ugyldig
+  input, HTTP 502 når språkmodellens API returnerer ugyldig respons eller
+  ikke kan nås, HTTP 503 ved midlertidig utilgjengelig tjeneste, kvoteproblem
+  eller rate limiting, og HTTP 500 kun ved uventet intern feil.
 5. Har CORS-middleware som tillater alle origins for lokal utvikling.
+
+Responsen skal så langt som mulig beholde den stabile strukturen frontend
+forventer. Validatorfeil skal ikke gjøre et matematisk svar validert; vis
+svaret med `validert=False` og en ærlig forklaring.
 
 Behold GET / som returnerer frontend/index.html.
 ```

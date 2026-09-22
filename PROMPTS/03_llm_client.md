@@ -53,19 +53,24 @@ tekst. Formelvalg er annerledes: modellen kan oppgi formel-ID per steg, men
 appen må kontrollere at ID-en finnes i `FORMELSAMLING` og hente navn og
 referanse derfra. En gyldig ID viser hvor regelen står; den beviser ikke at
 regelen er anvendt riktig eller at et SymPy-kall skjedde.
-## [FYLL INN SELV] – ta stilling til dette FØR dere sender prompten
+## Gruppens valg
 
 - Systemprompten i skjelettet er et **minimum**. Hva vil DERE legge til for
   at forklaringene skal bli forståelige for DERE (ikke bare fagkorrekte)?
   Eksempel: be modellen unngå unødvendig fagsjargong, eller alltid forklare
-  *hvorfor* et steg gjøres, ikke bare *hva* som gjøres. Skriv deres tillegg:
-  `____________________________________________`
+  *hvorfor* et steg gjøres, ikke bare *hva* som gjøres. Gruppen velger enkelt
+  norsk tilpasset førsteårs ingeniørstudenter. Modellen skal forklare hvorfor
+  hvert steg gjøres, forklare nye symboler og faguttrykk kort, vise
+  mellomregning i naturlig rekkefølge og skille tydelig mellom egne
+  forklaringer og resultater som faktisk kommer fra SymPy.
 - Hvor mange tool-calling-runder skal appen maks tillate før den gir opp (for
-  å unngå evighetsløkker)? Bestem et tall og begrunn kort:
-  `____________________________________________`
+  å unngå evighetsløkker)? Maksimalt 8 tool-calling-runder tillates. Det gir
+  rom for flere nødvendige beregninger, men stopper evighetsløkker og
+  unødvendig tokenbruk.
 - Hvis dere limer svar inn fra en nettleser-KI som ikke gir `response.usage`
   (tokens): hva skal appen vise da? (Forslag: vær ærlige – vis `"ukjent"`
-  fremfor å late som dere har et tall. Dette henger sammen med
+  fremfor å late som dere har et tall. Appen skal vise `"ukjent"` og ikke
+  finne på tokenforbruk eller kostnad. Dette henger sammen med
   ærlighetsprinsippet i `validator.py`.)
 
 ## Ferdig prompt å lime inn (etter at dere har fylt inn over)
@@ -88,7 +93,12 @@ navn, formel, bruk og referanse. Be modellen knytte hver brukt formel-ID til
 det konkrete steget der formelen anvendes. Avvis ukjente formel-ID-er før
 responsen returneres.
 
-Tillegg til systemprompten fra oss: [LIM INN DERES SVAR OVER]
+Tillegg til systemprompten fra oss: Bruk enkelt norsk tilpasset førsteårs
+ingeniørstudenter. Forklar hvorfor hvert steg gjøres, ikke bare hva som gjøres,
+forklar nye symboler og faguttrykk kort, vis mellomregning i naturlig rekkefølge
+og skill tydelig mellom egne forklaringer og resultater som faktisk kommer fra
+SymPy. Tillat maksimalt 8 tool-calling-runder. Hvis `response.usage` ikke gir
+tokeninformasjon, vis `"ukjent"` og ikke finn på tokenforbruk eller kostnad.
 
 Implementer solve_task(oppgave: str) -> dict som:
 1. Sender oppgaven + TOOL_DEFINITIONS fra tools.py til modellen (med mindre

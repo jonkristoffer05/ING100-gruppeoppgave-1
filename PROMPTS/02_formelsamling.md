@@ -12,13 +12,18 @@ formelen er relevant). Dekk minst:
 derivasjonsregler, integrasjonsregler, karakteristisk ligning for ODE,
 Eulers formel, determinant/egenverdier, delvis integrasjon.
 
-## [FYLL INN SELV] – ta stilling til dette FØR dere sender prompten
+## Gruppens valg
 
 - Hvilke formler er faktisk pensum i DERES mattekurs? Ikke bare kopier en
   generisk liste – sjekk emneplan/pensumliste og skriv opp 3–5 formler dere
   vet trengs, med sidetall fra DERES lærebok (Edwards & Penney / Thomas'
   Calculus / Tekniske Tabeller):
-  `____________________________________________`
+  Produktregelen og kjerneregelen for derivasjon – Thomas' Calculus,
+  kapittel 3. Delvis integrasjon – Thomas' Calculus, kapittel om
+  integrasjonsteknikker. Karakteristisk ligning – Edwards & Penney, kapittel
+  om lineære andreordens differensialligninger. Eulers formel – Buanes:
+  Komplekse tall, pensumdelen om komplekse tall. Determinant, egenverdier og
+  løsning av lineære ligningssystemer – pensumdelen om lineær algebra.
 
 ## Valgfri utvidelse: teoremer, ikke bare regneformler
 
@@ -42,7 +47,15 @@ ligning for 2. ordens lineær ODE, Eulers formel, determinant og egenverdier
 for 2x2/3x3-matriser, løsning av lineære likningssystem.
 
 Inkluder også disse spesifikke formlene fra pensum:
-[LIM INN LISTEN DERES FRA "FYLL INN SELV" OVER]
+- Produktregelen for derivasjon – Thomas' Calculus, kapittel 3.
+- Kjerneregelen – Thomas' Calculus, kapittel 3.
+- Delvis integrasjon – Thomas' Calculus, kapittel om integrasjonsteknikker.
+- Karakteristisk ligning for lineære differensialligninger – Edwards & Penney,
+  kapittel om lineære andreordens differensialligninger.
+- Eulers formel for komplekse tall – Buanes: Komplekse tall, pensumdelen om
+  komplekse tall.
+- Determinant, egenverdier og løsning av lineære ligningssystemer – pensumdelen
+  om lineær algebra.
 ```
 
 ## Kvalitetssjekk før du limer inn koden
