@@ -6,55 +6,174 @@
   <!-- MathJax for LaTeX-rendering -->
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
   <style>
-    body { font-family: system-ui, sans-serif; max-width: 720px; margin: 2rem auto; padding: 0 1rem; }
-    textarea { width: 100%; height: 5rem; font-size: 1rem; }
-    button { font-size: 1rem; padding: 0.5rem 1.5rem; margin-top: 0.5rem; cursor: pointer; }
-    .validert-ok { color: green; font-weight: bold; }
-    .validert-feil { color: red; font-weight: bold; }
-    .kostnad { color: #666; font-size: 0.9rem; margin-top: 1rem; }
-    li { margin-bottom: 0.5rem; }
+    :root {
+      --ink: #19324a;
+      --muted: #607286;
+      --line: #d9e3ec;
+      --paper: #ffffff;
+      --page: #edf3f8;
+      --blue: #2167c5;
+      --blue-dark: #174d99;
+      --green: #147a4b;
+      --green-soft: #e9f7ef;
+      --orange: #a9580b;
+      --orange-soft: #fff3e5;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      padding: 2.5rem 1rem;
+      color: var(--ink);
+      background: linear-gradient(145deg, #e8f0f7 0%, var(--page) 52%, #e3edf6 100%);
+      font-family: Georgia, "Times New Roman", serif;
+    }
+
+    main {
+      max-width: 850px;
+      margin: 0 auto;
+      padding: clamp(1.5rem, 4vw, 3rem);
+      background: var(--paper);
+      border: 1px solid rgba(217, 227, 236, 0.9);
+      border-radius: 18px;
+      box-shadow: 0 18px 45px rgba(32, 62, 91, 0.12);
+    }
+
+    .intro { margin-bottom: 1.75rem; }
+    h1 { margin: 0 0 0.65rem; font-size: clamp(2rem, 5vw, 3rem); letter-spacing: 0; }
+    .lede { max-width: 42rem; margin: 0; color: var(--muted); font-size: 1.08rem; line-height: 1.6; }
+
+    .input-panel { display: grid; gap: 0.85rem; }
+    label { color: var(--ink); font-size: 1.05rem; font-weight: 700; }
+    textarea {
+      display: block;
+      width: 100%;
+      min-height: 9rem;
+      padding: 1rem 1.1rem;
+      resize: vertical;
+      color: var(--ink);
+      background: #fbfdff;
+      border: 2px solid var(--line);
+      border-radius: 10px;
+      font: 1.05rem/1.55 Georgia, "Times New Roman", serif;
+    }
+    textarea:focus { outline: 3px solid rgba(33, 103, 197, 0.18); border-color: var(--blue); }
+    button {
+      justify-self: start;
+      padding: 0.8rem 1.35rem;
+      color: #fff;
+      background: var(--blue);
+      border: 0;
+      border-radius: 8px;
+      box-shadow: 0 5px 12px rgba(33, 103, 197, 0.2);
+      font: 700 1rem Georgia, "Times New Roman", serif;
+      cursor: pointer;
+      transition: background 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+    }
+    button:hover { background: var(--blue-dark); transform: translateY(-1px); box-shadow: 0 7px 16px rgba(33, 103, 197, 0.28); }
+    button:disabled { opacity: 0.65; cursor: wait; transform: none; }
+
+    #status { min-height: 1.5rem; margin: 1rem 0 0; color: var(--muted); font-size: 0.95rem; }
+    #status.error { color: var(--orange); }
+    #resultat { margin-top: 2rem; }
+    #resultat h2 { margin: 0 0 0.75rem; font-size: 1.7rem; }
+    #resultat h3 { margin: 0 0 0.75rem; font-size: 1.15rem; }
+    .result-card {
+      margin-top: 1rem;
+      padding: 1.15rem 1.25rem;
+      background: #fbfdff;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+    }
+    #svar { line-height: 1.7; overflow-wrap: anywhere; }
+    ol, ul { margin: 0; padding-left: 1.4rem; }
+    li { margin-bottom: 0.6rem; line-height: 1.5; }
+    li:last-child { margin-bottom: 0; }
+    .validert-ok, .validert-feil { margin: 0; font-weight: 700; }
+    .validert-ok { color: var(--green); background: var(--green-soft); border-color: #b9e5ca; }
+    .validert-feil { color: var(--orange); background: var(--orange-soft); border-color: #f0cca4; }
+    .kostnad { margin: 0; color: var(--muted); font-size: 0.95rem; }
+
+    @media (max-width: 600px) {
+      body { padding: 1rem 0.65rem; }
+      main { padding: 1.25rem; border-radius: 14px; }
+      textarea { min-height: 8rem; }
+      button { width: 100%; }
+    }
   </style>
 </head>
 <body>
-  <h1>MatteHjelpen 🧮</h1>
-  <p>Skriv inn en matteoppgave (f.eks. «Løs y'' + 4y = 0» eller «Deriver x²·sin(x)»):</p>
-  <textarea id="oppgave" placeholder="Skriv oppgaven her..."></textarea>
-  <br>
-  <button onclick="los()">Løs</button>
+  <main>
+    <header class="intro">
+      <h1>MatteHjelpen 🧮</h1>
+      <p class="lede">Skriv inn en matteoppgave, så får du et tydelig svar med forklaring, formler og valideringsstatus.</p>
+    </header>
 
-  <div id="resultat" style="display:none">
-    <h2>Svar</h2>
-    <div id="svar"></div>
-    <h3>Stegvis løsning</h3>
-    <ol id="steg"></ol>
-    <h3>Formler brukt</h3>
-    <ul id="formler"></ul>
-    <p id="validering"></p>
-    <p class="kostnad" id="kostnad"></p>
-  </div>
+    <section class="input-panel" aria-labelledby="oppgave-label">
+      <label id="oppgave-label" for="oppgave">Hva vil du regne ut?</label>
+      <textarea id="oppgave" placeholder="Skriv oppgaven her..." aria-describedby="oppgave-hjelp"></textarea>
+      <span id="oppgave-hjelp" class="lede">Eksempel: «Løs y'' + 4y = 0» eller «Deriver x²·sin(x)».</span>
+      <button id="los-knapp" onclick="los()">Løs oppgaven</button>
+    </section>
+    <p id="status" role="status" aria-live="polite"></p>
+
+    <section id="resultat" style="display:none" aria-live="polite">
+      <h2>Resultat</h2>
+      <article class="result-card">
+        <h3>Svar</h3>
+        <div id="svar"></div>
+      </article>
+      <article class="result-card">
+        <h3>Stegvis løsning</h3>
+        <ol id="steg"></ol>
+      </article>
+      <article class="result-card">
+        <h3>Formler brukt</h3>
+        <ul id="formler"></ul>
+      </article>
+      <p class="result-card" id="validering"></p>
+      <p class="result-card kostnad" id="kostnad"></p>
+    </section>
+  </main>
 
   <script>
     async function los() {
       const oppgave = document.getElementById('oppgave').value;
-      const res = await fetch('/solve', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ oppgave })
-      });
-      const data = await res.json();
+      const knapp = document.getElementById('los-knapp');
+      const status = document.getElementById('status');
+      knapp.disabled = true;
+      status.className = '';
+      status.textContent = 'Regner ut svaret...';
+      try {
+        const res = await fetch('/solve', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ oppgave })
+        });
+        if (!res.ok) throw new Error(`Serveren svarte med status ${res.status}.`);
+        const data = await res.json();
 
-      document.getElementById('resultat').style.display = 'block';
-      document.getElementById('svar').innerHTML = data.svar;
-      document.getElementById('steg').innerHTML =
-        data.steg.map(s => `<li>${s}</li>`).join('');
-      document.getElementById('formler').innerHTML =
-        data.formler_brukt.map(f => `<li>${f}</li>`).join('');
-      const v = document.getElementById('validering');
-      v.textContent = data.validert ? '✅ Svaret er numerisk validert' : '❌ Svaret kunne IKKE valideres – stol ikke blindt på det!';
-      v.className = data.validert ? 'validert-ok' : 'validert-feil';
-      document.getElementById('kostnad').textContent =
-        `Tokens brukt: ${data.tokens_brukt} · Estimert kostnad: $${data.estimert_kostnad}`;
-      MathJax.typeset();
+        document.getElementById('resultat').style.display = 'block';
+        document.getElementById('svar').innerHTML = data.svar;
+        document.getElementById('steg').innerHTML =
+          data.steg.map(s => `<li>${s}</li>`).join('');
+        document.getElementById('formler').innerHTML =
+          data.formler_brukt.map(f => `<li>${f}</li>`).join('');
+        const v = document.getElementById('validering');
+        v.textContent = data.validert ? '✅ Svaret er numerisk validert' : '❌ Svaret kunne IKKE valideres – stol ikke blindt på det!';
+        v.className = data.validert ? 'validert-ok result-card' : 'validert-feil result-card';
+        document.getElementById('kostnad').textContent =
+          `Tokens brukt: ${data.tokens_brukt} · Estimert kostnad: $${data.estimert_kostnad}`;
+        status.textContent = 'Svar klart.';
+        MathJax.typeset();
+      } catch (error) {
+        status.className = 'error';
+        status.textContent = `Noe gikk galt: ${error.message} Prøv igjen.`;
+      } finally {
+        knapp.disabled = false;
+      }
     }
   </script>
 </body>

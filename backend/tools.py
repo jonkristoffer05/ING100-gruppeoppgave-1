@@ -32,6 +32,10 @@ def _result(value):
     value = sp.simplify(value) if isinstance(value, sp.Expr) else value
     return {"resultat": str(value), "latex": sp.latex(value) if isinstance(value, sp.Basic) else str(value)}
 
+def calculate(uttrykk: str) -> dict:
+    """Forenkle og beregn et vanlig matematisk uttrykk med SymPy."""
+    return _result(sp.simplify(_parse(uttrykk)))
+
 def derive(uttrykk: str, variabel: str = "x") -> dict:
     var = sp.Symbol(variabel, real=True)
     return _result(sp.diff(_parse(uttrykk, {variabel: var}), var))
@@ -129,6 +133,7 @@ def complex_op(operasjon: str, tall: str) -> dict:
 
 TOOL_DEFINITIONS = []
 for name, description, properties, required in [
+    ("calculate", "Beregn vanlig aritmetikk som 7-5, brøker, potenser og andre numeriske uttrykk.", {"uttrykk": {"type": "string"}}, ["uttrykk"]),
     ("derive", "Deriver et uttrykk.", {"uttrykk": {"type": "string"}, "variabel": {"type": "string"}}, ["uttrykk"]),
     ("integrate", "Integrer et uttrykk.", {"uttrykk": {"type": "string"}, "variabel": {"type": "string"}}, ["uttrykk"]),
     ("solve_equation", "Løs en ligning.", {"ligning": {"type": "string"}, "variabel": {"type": "string"}}, ["ligning"]),

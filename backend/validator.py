@@ -1,19 +1,34 @@
 """Ærlig numerisk validering av enkle ligninger og ODE-er."""
 from __future__ import annotations
+import re
 import sympy as sp
 from sympy.parsing.sympy_parser import parse_expr, standard_transformations, implicit_multiplication_application
 _TRANSFORMS = standard_transformations + (implicit_multiplication_application,)
+_NUMERIC_TOLERANCE = 1e-5
+
+
+def _normalise_text(text):
+    text = str(text).strip().replace("^", "**").replace("j", "I")
+    text = re.sub(r"(?<=\d),(?=\d)", ".", text)
+    variables = "xyz tabc n".replace(" ", "")
+    pairs = [first + second for first in variables for second in variables if first != second]
+    pair_pattern = r"(?<![A-Za-z_])(" + "|".join(sorted(pairs, key=len, reverse=True)) + r")(?![A-Za-z_(])"
+    return re.sub(pair_pattern, lambda match: "*".join(match.group(1)), text)
 
 def _parse(text, local=None):
-    text = str(text).strip().replace("^", "**").replace("j", "I")
+    text = _normalise_text(text)
     if not text:
         raise ValueError("Uttrykket er tomt.")
     base = {"Eq": sp.Eq, "exp": sp.exp, "sin": sp.sin, "cos": sp.cos, "tan": sp.tan, "log": sp.log, "sqrt": sp.sqrt, "I": sp.I, "pi": sp.pi}
     base.update(local or {})
     for name in ("x", "t", "a", "b", "c", "C1", "C2"): base.setdefault(name, sp.Symbol(name, real=True))
-    base.setdefault("y", sp.Function("y"))
+    if "y(" not in text and ".diff" not in text and "Derivative" not in text:
+        base["y"] = sp.Symbol("y", real=True)
+    else:
+        base.setdefault("y", sp.Function("y"))
     try:
-        return parse_expr(text, local_dict=base, transformations=_TRANSFORMS)
+        parsed = parse_expr(text, local_dict=base, transformations=_TRANSFORMS)
+        return sp.nsimplify(parsed, rational=True)
     except (SyntaxError, TypeError, ValueError) as exc:
         raise ValueError(f"Ugyldig matematisk syntaks: {text}") from exc
 
@@ -34,6 +49,10 @@ def _solution(text, local):
         raise ValueError("Løsningen må ha formatet venstreside = høyreside.")
     left, right = str(text).split("=", 1)
     return _parse(left, local), _parse(right, local)
+
+
+def _is_plain_expression(parsed):
+    return not isinstance(parsed, sp.Equality) and not parsed.has(sp.Derivative)
 
 
 def _unknown_symbols(expression, allowed):
@@ -77,6 +96,12 @@ def validate(problem: str, losning: str) -> dict:
         x = sp.Symbol("x", real=True)
         y = sp.Function("y")
         local = {"x": x, "y": y}
+        parsed_problem = _parse(problem, local) if "=" not in str(problem) else None
+        if parsed_problem is not None and _is_plain_expression(parsed_problem) and "=" not in str(losning):
+            answer = _parse(losning, local)
+            points, residuals = _numeric_residuals(parsed_problem - answer, x, {"x"})
+            valid = all(residual <= _NUMERIC_TOLERANCE for residual in residuals)
+            return {"validert": valid, "detaljer": f"Testet uttrykket i x={points}; residualer={residuals}."}
         equation = _equation(problem, local)
         left, solution = _solution(losning, local)
         expression = equation.lhs - equation.rhs
@@ -94,7 +119,7 @@ def validate(problem: str, losning: str) -> dict:
             allowed = {"x"}
 
         points, residuals = _numeric_residuals(substituted, x, allowed)
-        valid = all(residual < 1e-6 for residual in residuals)
+        valid = all(residual <= _NUMERIC_TOLERANCE for residual in residuals)
         kind = "differensialligningen" if is_ode else "ligningen"
         return {"validert": valid, "detaljer": f"Testet {kind} i x={points}; residualer={residuals}."}
     except Exception as exc:

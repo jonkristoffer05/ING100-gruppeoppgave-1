@@ -6,10 +6,10 @@ import re
 from dotenv import load_dotenv
 from openai import OpenAI
 from backend.formelsamling import FORMELSAMLING
-from backend.tools import TOOL_DEFINITIONS, derive, integrate, solve_equation, solve_ode, matrix_op, complex_op
+from backend.tools import TOOL_DEFINITIONS, calculate, derive, integrate, solve_equation, solve_ode, matrix_op, complex_op
 
 USE_TOOLS = True
-_TOOL_MAP = {"derive": derive, "integrate": integrate, "solve_equation": solve_equation, "solve_ode": solve_ode, "matrix_op": matrix_op, "complex_op": complex_op}
+_TOOL_MAP = {"calculate": calculate, "derive": derive, "integrate": integrate, "solve_equation": solve_equation, "solve_ode": solve_ode, "matrix_op": matrix_op, "complex_op": complex_op}
 _MAX_TOOL_ROUNDS = 8
 
 def _formula_context():
@@ -100,7 +100,8 @@ def solve_task(oppgave: str) -> dict:
     except Exception as exc:
         return _empty_result(f"Modellklienten kunne ikke startes: {exc}")
     prompt = ("Du er en matematikklærer for ingeniørstudenter. Svar alltid på norsk og forklar med flere korte, pedagogiske steg. "
-              "Bruk SymPy-verktøyene til all symbolsk og numerisk beregning, og bruk verktøy når beregningen støttes. "
+              "Bruk SymPy-verktøyene til all symbolsk og numerisk beregning, og bruk calculate-verktøyet alltid for vanlig tallregning som 7-5, brøker, potenser og andre numeriske uttrykk. "
+              "Du skal ikke regne ut slik aritmetikk selv. "
               "Knytt hver brukt formel-ID til det konkrete steget der den brukes. Ikke påstå at et verktøy er brukt hvis det ikke faktisk ble kalt. "
               "For bevis, begrepsoppgaver eller tvetydig input skal du forklare tekstlig, men si tydelig at svaret ikke er verktøyverifisert. "
               "Den endelige responsen skal være gyldig JSON uten ekstra tekst, med nøyaktig feltene svar (string), steg (liste med strings) og formel_ider (liste med gyldige ID-strenger).\n\n"
