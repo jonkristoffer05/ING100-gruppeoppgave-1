@@ -40,7 +40,8 @@ grenseverdier, serieutvikling) – hold da samme mønster:
   syntaks, deling på null, matrise med feil dimensjoner.) Skriv egen liste:
   Tom input, ugyldig SymPy-syntaks, ukjente operasjoner, ugyldige variabler,
   deling på null, matriser med feil dimensjoner, singulære matriser og
-  ugyldige komplekse uttrykk skal håndteres eksplisitt.
+  ugyldige komplekse uttrykk skal håndteres eksplisitt. Det inkluderer også
+  tomme uttrykk og ugyldige parameterverdier for komplekse tall.
 - Skal feil kastes som exceptions, eller returneres som del av dict
   (f.eks. `{"feil": "..."}`)? Funksjonene skal kaste `ValueError` med en
   kort og forståelig norsk feilmelding; API-laget skal fange feilen slik at
