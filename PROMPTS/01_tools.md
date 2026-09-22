@@ -79,9 +79,18 @@ Skriv en kort forklarende docstring per funksjon, på norsk.
 
 ## Kvalitetssjekk før du limer inn koden
 
+<<<<<<< HEAD
 - [ ] Alle 7 funksjonsnavn og parametere er UENDRET fra skjelettet.
 - [ ] Ingen `NotImplementedError` igjen.
 - [ ] `TOOL_DEFINITIONS` finnes og er en liste.
 - [ ] Dere forstår hvordan feil håndteres, og det stemmer med gruppens valg
   over.
 - [ ] Kjør `python scripts/selftest.py` – tools-sjekkene bør nå vise ✅.
+=======
+- [x] Alle 6 funksjonsnavn og parametere er UENDRET fra skjelettet.
+- [x] Ingen `NotImplementedError` igjen.
+- [x] `TOOL_DEFINITIONS` finnes og er en liste.
+- [x] Dere forstår hvordan feil håndteres, og det stemmer med det dere
+      bestemte i «FYLL INN SELV» over.
+- [x] Kjør `python scripts/selftest.py` – tools-sjekkene bør nå vise ✅.
+>>>>>>> 68a48b2 (Legg til oppgavebeskrivelse)
