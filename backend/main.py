@@ -1,40 +1,34 @@
-"""MatteHjelpen – FastAPI-backend.
-
-SKJELETT: Bruk SYSTEMBESKRIVELSE.md som prompt og la en språkmodell hjelpe dere
-å fylle ut. Kravene:
-
-- POST /solve tar {"oppgave": "..."} og returnerer JSON med:
-  svar, steg (liste), formler_brukt, validert (bool), tokens_brukt, estimert_kostnad
-- GET / serverer frontend/index.html
-- God feilhåndtering: vis feil ærlig, ikke skjul dem.
-"""
-
+"""FastAPI-kobling for MatteHjelpen."""
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
+from backend import llm_client, validator
 
 app = FastAPI(title="MatteHjelpen")
-
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
 class Oppgave(BaseModel):
     oppgave: str
-
 
 @app.get("/")
 async def index():
     return FileResponse("frontend/index.html")
 
-
 @app.post("/solve")
-async def solve(oppgave: Oppgave):
-    # TODO: Kall llm_client.solve_task(oppgave.oppgave)
-    # TODO: Valider svaret med validator.validate(...)
-    # TODO: Returner full respons iht. SYSTEMBESKRIVELSE.md
-    return {
-        "svar": "Ikke implementert ennå – se SYSTEMBESKRIVELSE.md",
-        "steg": [],
-        "formler_brukt": [],
-        "validert": False,
-        "tokens_brukt": 0,
-        "estimert_kostnad": 0.0,
-    }
+async def solve(payload: Oppgave):
+    base = {"svar": "", "steg": [], "formler_brukt": [], "validert": False, "tokens_brukt": 0, "estimert_kostnad": 0.0}
+    problem = (payload.oppgave or "").strip()
+    if not problem:
+        base["svar"] = "Oppgaven er tom."
+        return base
+    try:
+        result = llm_client.solve_task(problem)
+        base.update({key: result.get(key, base[key]) for key in ("svar", "steg", "formler_brukt", "tokens_brukt", "estimert_kostnad")})
+        validation = validator.validate(problem, str(base["svar"]))
+        base["validert"] = bool(validation.get("validert", False))
+        return base
+    except Exception as exc:
+        base["svar"] = f"Feil: {exc}"
+        base["steg"] = ["Klarte ikke å fullføre oppgaven. Se feilmeldingen i svaret."]
+        return base

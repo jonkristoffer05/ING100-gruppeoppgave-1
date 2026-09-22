@@ -1,49 +1,49 @@
-"""LLM-klient for MatteHjelpen.
+"""LLM-klient med OpenAI-kompatibel tool-calling."""
+from __future__ import annotations
+import json, os
+from dotenv import load_dotenv
+from openai import OpenAI
+from backend.formelsamling import FORMELSAMLING
+from backend.tools import TOOL_DEFINITIONS, derive, integrate, solve_equation, solve_ode, matrix_op, complex_op
 
-SKJELETT – TODO:
-- Les API_KEY, MODEL_NAME og API_BASE_URL fra .env (python-dotenv).
-- Bruk openai-biblioteket med base_url mot et OpenAI-kompatibelt API
-  (f.eks. OpenRouter, OpenAI selv, eller en annen leverandør).
-- SYSTEMPROMPT (viktig – ikke fjern kravene uten å forstå konsekvensen!):
+USE_TOOLS = True
+_TOOL_MAP = {"derive": derive, "integrate": integrate, "solve_equation": solve_equation, "solve_ode": solve_ode, "matrix_op": matrix_op, "complex_op": complex_op}
 
-  "Du er en matematikklærer for ingeniørstudenter. Bruk verktøyene (SymPy)
-  til all beregning når oppgaven lar seg beregne slik – du skal ALDRI late
-  som du har brukt et verktøy du ikke faktisk kalte. Kan oppgaven ikke
-  beregnes (f.eks. et bevis eller en begrepsforklaring), resonnerer du i
-  tekst og sier eksplisitt at svaret IKKE er verifisert av et verktøy.
-  Forklar hvert steg pedagogisk på norsk, og oppgi nøyaktig hvilke
-  formler/verktøy du faktisk brukte. Knytt hver formel-ID til steget der den
-  brukes, og ta med navn og referanse fra formelsamlingen.
-  Hvis du er usikker, si det eksplisitt."
+def _formula_context():
+    return "\n".join(f"{key}: {value['navn']} | {value['formel']} | {value['referanse']} | {value['bruk']}" for key, value in FORMELSAMLING.items())
 
-  MERK: «all beregning gjøres via verktøy» gjelder ting SymPy faktisk kan
-  regne (derivasjon, ligninger, matriser, ...) – ikke bevis eller
-  begrepsforklaringer. Det er legitime matteoppgaver appen skal svare
-  ærlig på, uten å late som SymPy validerte noe den ikke kan validere.
-
-- ANTI-HALLUSINASJON: Ikke stol på at modellen forteller sant om egen
-  verktøybruk. Bygg verktøyloggen fra faktiske tool_calls. Modellen kan
-  foreslå formel-ID per steg, men ID-en må finnes i formelsamlingen; hent
-  navn og referanse derfra i stedet for å stole på fri tekst.
-
-- FORMELSAMLING: Send oppføringene fra formelsamling.py til modellen i et
-  kompakt format med ID, navn, formel, bruk og referanse. Kontroller at alle
-  returnerte formel-ID-er finnes i FORMELSAMLING. Formelreferanser forklarer
-  metoden; de beviser ikke at et SymPy-verktøy faktisk ble kalt.
-
-- Implementer tool-calling-løkke:
-  1) Send oppgaven + tool-definisjoner fra tools.py
-  2) Hvis modellen ber om tool-kall: kjør funksjonen, legg resultatet i samtalen
-  3) Gjenta til modellen gir endelig svar
-- Tell tokens (response.usage) og estimer kostnad.
-
-EKSPERIMENT-BRYTER: Sett USE_TOOLS = False og se hva som skjer med en billig
-modell. Dokumenter i EKSPERIMENT.md!
-"""
-
-USE_TOOLS = True  # <-- Aha-bryter nr. 1
-
+def _formula_details(text):
+    return [{"id": key, **FORMELSAMLING[key]} for key in FORMELSAMLING if key in (text or "")]
 
 def solve_task(oppgave: str) -> dict:
-    """Løs en matteoppgave via LLM + tools. Returner dict iht. SYSTEMBESKRIVELSE.md."""
-    raise NotImplementedError("Vibe code me! Se SYSTEMBESKRIVELSE.md")
+    load_dotenv()
+    api_key = os.getenv("API_KEY")
+    if not api_key: raise RuntimeError("API_KEY mangler i .env.")
+    client = OpenAI(api_key=api_key, base_url=os.getenv("API_BASE_URL") or None)
+    prompt = ("Du er en matematikklærer for ingeniørstudenter. Bruk SymPy-verktøyene til all symbolsk og numerisk beregning. "
+              "Ikke påstå at et verktøy er brukt hvis det ikke faktisk ble kalt. For bevis og begrepsforklaringer skal du si at svaret ikke er verktøyverifisert. "
+              "Forklar hvert steg på norsk, bruk formel-ID-er fra formelsamlingen og si tydelig fra ved usikkerhet.\n\nFormelsamling:\n" + _formula_context())
+    messages = [{"role": "system", "content": prompt}, {"role": "user", "content": oppgave}]
+    total_tokens = 0
+    final = ""
+    for _ in range(6):
+        kwargs = {"model": os.getenv("MODEL_NAME", "gpt-4o-mini"), "messages": messages, "temperature": 0.2}
+        if USE_TOOLS: kwargs.update(tools=TOOL_DEFINITIONS, tool_choice="auto")
+        response = client.chat.completions.create(**kwargs)
+        usage = getattr(response, "usage", None)
+        total_tokens += int(getattr(usage, "total_tokens", 0) or 0)
+        message = response.choices[0].message
+        calls = getattr(message, "tool_calls", None)
+        if not calls:
+            final = message.content or ""
+            break
+        messages.append({"role": "assistant", "content": message.content, "tool_calls": [{"id": c.id, "type": c.type, "function": {"name": c.function.name, "arguments": c.function.arguments}} for c in calls]})
+        for call in calls:
+            try:
+                args = json.loads(call.function.arguments or "{}")
+                result = _TOOL_MAP[call.function.name](**args)
+            except Exception as exc:
+                result = {"resultat": f"Feil i verktøyet: {exc}", "latex": ""}
+            messages.append({"role": "tool", "tool_call_id": call.id, "content": json.dumps(result)})
+    if not final: final = "Modellen returnerte ikke et ferdig svar."
+    return {"svar": final, "steg": [final], "formler_brukt": _formula_details(final), "tokens_brukt": total_tokens, "estimert_kostnad": round(total_tokens * 0.0000005, 6)}
