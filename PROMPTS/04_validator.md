@@ -39,8 +39,8 @@ sier at en løsning stemmer, skal det være fordi dere faktisk sjekket det.
 Implementer backend/validator.py sin funksjon
 validate(problem: str, losning: str) -> dict som:
 1. Bruker SymPy til å tolke problem og losning.
-2. Setter løsningen inn i problemet og evaluerer numerisk i 3 tilfeldige
-  minst 3 faste, reproduserbare testpunkter (subs + evalf).
+2. Setter løsningen inn i problemet og evaluerer numerisk i minst 3 faste,
+   reproduserbare testpunkter (subs + evalf).
 3. Bruker toleranse `1e-6` for å avgjøre om det stemmer.
 4. Returnerer {"validert": bool, "detaljer": str} der detaljer forklarer
    HVA som ble sjekket og i hvilke punkter.

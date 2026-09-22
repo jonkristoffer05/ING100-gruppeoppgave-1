@@ -49,7 +49,12 @@ grenseverdier, serieutvikling) – hold da samme mønster:
 - Hvor «smart» skal parsing av matteuttrykk være? (F.eks.: skal `sin^-1(x)`
   tolkes som invers funksjon eller som potens? Dette er et av
   «aha-punktene» i `OPPGAVE.md` – bestem en tolkning og vær eksplisitt om
-  den i koden/docstringen.) Parseren støtter blant annet +, -, *, /, potenser, implisitt multiplikasjon, sin, cos, tan, exp, sqrt, log, komplekse tall og vanlige symboler. Vi tolker sin^-1(x), cos^-1(x) og tan^-1(x) som henholdsvis arcsin(x), arccos(x) og arctan(x). Denne tolkningen er gjort eksplisitt i parseren.
+  den i koden/docstringen.) Parseren støtter blant annet `+`, `-`, `*`, `/`,
+  potenser med `^`, implisitt multiplikasjon som `3.5x` og `2(x+1)`, `sin`,
+  `cos`, `tan`, `exp`, `sqrt`, `log`, komplekse tall og vanlige symboler.
+  Parseren bruker aldri `eval`. Vi tolker `sin^-1(x)` som `asin(x)`,
+  `cos^-1(x)` som `acos(x)` og `tan^-1(x)` som `atan(x)`. Denne tolkningen
+  er gjort eksplisitt i parseren, og tvetydigheten undersøkes i Del B.
 - Alle vellykkede verktøykall skal returnere `{"resultat": str, "latex": str}`.
 
 ## Ferdig prompt å lime inn (etter at dere har fylt inn over)
@@ -66,7 +71,8 @@ matriser og ugyldige komplekse uttrykk eksplisitt. Ved feil skal funksjonene
 kaste `ValueError` med en kort og forståelig norsk feilmelding. API-laget skal
 fange feilen slik at brukeren ikke får stack trace. Parseren skal støtte `^`,
 `3.5x` og `2(x+1)` som implisitt multiplikasjon uten å bruke `eval`.
-`sin^-1(x)` skal ikke tolkes automatisk; be brukeren presisere betydningen.
+Gruppens tolkning er `sin^-1(x)` som `asin(x)`, `cos^-1(x)` som `acos(x)` og
+`tan^-1(x)` som `atan(x)`. Tvetydigheten undersøkes i eksperimentet.
 
 Legg også til TOOL_DEFINITIONS: en liste med JSON-schema for OpenAI
 function-calling som beskriver disse 7 funksjonene (navn, beskrivelse,
@@ -77,11 +83,10 @@ Skriv en kort forklarende docstring per funksjon, på norsk.
 
 ## Kvalitetssjekk før du limer inn koden
 
-=======
 - [x] Alle 7 funksjonsnavn og parametere er UENDRET fra skjelettet.
 - [x] Ingen `NotImplementedError` igjen.
 - [x] `TOOL_DEFINITIONS` finnes og er en liste.
 - [x] Dere forstår hvordan feil håndteres, og det stemmer med det dere
-      bestemte i «FYLL INN SELV» over.
+  bestemte i gruppens valg over.
 - [x] Kjør `python scripts/selftest.py` – tools-sjekkene bør nå vise ✅.
 

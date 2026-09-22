@@ -73,6 +73,12 @@ regelen er anvendt riktig eller at et SymPy-kall skjedde.
   finne på tokenforbruk eller kostnad. Dette henger sammen med
   ærlighetsprinsippet i `validator.py`.)
 
+`USE_TOOLS = True` sender verktøydefinisjonene og `tool_choice` til API-et.
+Når `USE_TOOLS = False`, sendes forespørselen uten tools og tool_choice, og
+modellen skal ikke påstå at SymPy ble brukt. Verktøyloggen bygges fra faktiske
+tool-calls og inneholder funksjonsnavn og argumenter, for eksempel
+`Faktiske verktøykall: derive({"uttrykk":"x**2","variabel":"x"})`.
+
 ## Ferdig prompt å lime inn (etter at dere har fylt inn over)
 
 ```
@@ -105,7 +111,8 @@ Implementer solve_task(oppgave: str) -> dict som:
   USE_TOOLS er False).
 2. Håndterer tool-calling-løkken med en øvre grense (ikke uendelig løkke).
 3. Returnerer dict med: svar, steg (liste av strenger), formler_brukt,
-  tokens_brukt, estimert_kostnad. (validert settes IKKE her – det gjør
+  tokens_brukt, estimert_kostnad. Hvis `response.usage` mangler, skal
+  `tokens_brukt` og `estimert_kostnad` være `"ukjent"`. (validert settes IKKE her – det gjør
   validator.py, kalt fra main.py.)
 
 Hvis modellen gir et matematisk svar i fri tekst, men dere også vil rendere pen

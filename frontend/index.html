@@ -152,8 +152,14 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ oppgave })
         });
-        if (!res.ok) throw new Error(`Serveren svarte med status ${res.status}.`);
         const data = await res.json();
+        if (!res.ok) {
+          document.getElementById('resultat').style.display = 'block';
+          document.getElementById('svar').textContent = data.svar || 'Forespørselen kunne ikke behandles.';
+          status.className = 'error';
+          status.textContent = data.svar || 'Noe gikk galt. Prøv igjen.';
+          return;
+        }
 
         document.getElementById('resultat').style.display = 'block';
         document.getElementById('svar').innerHTML = data.svar;

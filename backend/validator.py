@@ -4,7 +4,7 @@ import re
 import sympy as sp
 from sympy.parsing.sympy_parser import parse_expr, standard_transformations, implicit_multiplication_application
 _TRANSFORMS = standard_transformations + (implicit_multiplication_application,)
-_NUMERIC_TOLERANCE = 1e-5
+_NUMERIC_TOLERANCE = 1e-6
 
 
 def _normalise_text(text):

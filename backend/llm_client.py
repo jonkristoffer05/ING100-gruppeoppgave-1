@@ -12,11 +12,19 @@ USE_TOOLS = True
 _TOOL_MAP = {"calculate": calculate, "derive": derive, "integrate": integrate, "solve_equation": solve_equation, "solve_ode": solve_ode, "matrix_op": matrix_op, "complex_op": complex_op}
 _MAX_TOOL_ROUNDS = 8
 
+
+class ModelAPIError(RuntimeError):
+    """Intern feiltype for utilgjengelig eller ugyldig modell-API."""
+
+    def __init__(self, message, status_code=502):
+        super().__init__(message)
+        self.status_code = status_code
+
 def _formula_context():
     return "\n".join(f"{key}: {value['navn']} | {value['formel']} | {value['referanse']} | {value['bruk']}" for key, value in FORMELSAMLING.items())
 
 def _empty_result(svar=""):
-    return {"svar": str(svar), "steg": [], "formler_brukt": [], "tokens_brukt": 0, "estimert_kostnad": 0.0}
+    return {"svar": str(svar), "steg": [], "formler_brukt": [], "tokens_brukt": "ukjent", "estimert_kostnad": "ukjent"}
 
 
 def _parse_final_json(content):
@@ -64,22 +72,41 @@ def _normalise_final(content):
 
 def _formula_details(formula_ids, steps):
     details = []
-    for index, formula_id in enumerate(formula_ids):
+    for formula_id in formula_ids:
         if formula_id not in FORMELSAMLING:
             continue
-        step_number = next((number for number, step in enumerate(steps, 1) if formula_id in step), min(index + 1, max(len(steps), 1)))
+        step_number = next((number for number, step in enumerate(steps, 1) if formula_id in step), None)
+        if step_number is None:
+            continue
         formula = FORMELSAMLING[formula_id]
         details.append(f"{formula_id} – {formula['navn']} – {formula['referanse']} – brukt i steg {step_number}")
     return details
 
 
+def _is_noncomputational_task(oppgave):
+    """Kjenner igjen enkle bevis- og begrepsoppgaver."""
+    text = str(oppgave).lower()
+    return any(word in text for word in ("bevis", "forklar", "hva betyr", "definer", "begrep"))
+
+
+def _looks_like_calculation_task(oppgave):
+    """Avgjør med en enkel heuristikk om oppgaven ber om beregning."""
+    if _is_noncomputational_task(oppgave):
+        return False
+    text = str(oppgave).lower()
+    calculation_words = ("deriver", "integrer", "løs", "beregn", "regn", "matrise", "egenverdi", "differensial")
+    return any(word in text for word in calculation_words) or bool(re.search(r"\d|[=+*/^()-]", text))
+
+
 def _usage_counts(response):
     usage = getattr(response, "usage", None)
+    if usage is None:
+        return 0, 0, False
     prompt_tokens = int(getattr(usage, "prompt_tokens", 0) or 0)
     completion_tokens = int(getattr(usage, "completion_tokens", 0) or 0)
-    if not prompt_tokens and not completion_tokens:
-        return int(getattr(usage, "total_tokens", 0) or 0), 0
-    return prompt_tokens, completion_tokens
+    if not hasattr(usage, "prompt_tokens") or not hasattr(usage, "completion_tokens"):
+        return 0, 0, False
+    return prompt_tokens, completion_tokens, True
 
 
 def _estimated_cost(prompt_tokens, completion_tokens):
@@ -94,14 +121,21 @@ def solve_task(oppgave: str) -> dict:
     load_dotenv()
     api_key = os.getenv("API_KEY")
     if not api_key:
-        return _empty_result("API-nøkkel mangler; oppgaven kunne ikke sendes til modellen.")
+        raise ModelAPIError("Modelltjenesten er ikke tilgjengelig.", 502)
     try:
         client = OpenAI(api_key=api_key, base_url=os.getenv("API_BASE_URL") or None)
     except Exception as exc:
-        return _empty_result(f"Modellklienten kunne ikke startes: {exc}")
+        raise ModelAPIError("Modelltjenesten kunne ikke startes.", 502) from exc
+    tool_instruction = (
+        "Bruk SymPy-verktøyene til all symbolsk og numerisk beregning, og bruk calculate-verktøyet alltid for vanlig tallregning som 7-5, brøker, potenser og andre numeriske uttrykk. Du skal ikke regne ut slik aritmetikk selv."
+        if USE_TOOLS else
+        "Verktøy er ikke tilgjengelige i denne forespørselen. Ikke påstå at SymPy eller et verktøy ble brukt; forklar eventuelt at svaret ikke er verktøyverifisert."
+    )
     prompt = ("Du er en matematikklærer for ingeniørstudenter. Svar alltid på norsk og forklar med flere korte, pedagogiske steg. "
-              "Bruk SymPy-verktøyene til all symbolsk og numerisk beregning, og bruk calculate-verktøyet alltid for vanlig tallregning som 7-5, brøker, potenser og andre numeriske uttrykk. "
-              "Du skal ikke regne ut slik aritmetikk selv. "
+              + tool_instruction + " "
+              "Beregningsoppgaver krever et faktisk tool-call før du gir sluttresponsen. "
+              "Hvert steg som bruker en formel skal inneholde formel-ID-en i hakeparenteser, for eksempel '[D4] Bruk potensregelen ...'. "
+              "Oppgi aldri en formel-ID som ikke er knyttet til et konkret steg. "
               "Knytt hver brukt formel-ID til det konkrete steget der den brukes. Ikke påstå at et verktøy er brukt hvis det ikke faktisk ble kalt. "
               "For bevis, begrepsoppgaver eller tvetydig input skal du forklare tekstlig, men si tydelig at svaret ikke er verktøyverifisert. "
               "Den endelige responsen skal være gyldig JSON uten ekstra tekst, med nøyaktig feltene svar (string), steg (liste med strings) og formel_ider (liste med gyldige ID-strenger).\n\n"
@@ -109,20 +143,37 @@ def solve_task(oppgave: str) -> dict:
     messages = [{"role": "system", "content": prompt}, {"role": "user", "content": oppgave}]
     prompt_tokens = 0
     completion_tokens = 0
+    usage_known = True
     tool_log = []
+    requires_tool = USE_TOOLS and _looks_like_calculation_task(oppgave)
+    required_retry_used = False
     final = ""
     try:
         for _ in range(_MAX_TOOL_ROUNDS):
             kwargs = {"model": os.getenv("MODEL_NAME", "gpt-4o-mini"), "messages": messages, "temperature": 0.2}
             if USE_TOOLS:
-                kwargs.update(tools=TOOL_DEFINITIONS, tool_choice="auto")
-            response = client.chat.completions.create(**kwargs)
-            prompt_count, completion_count = _usage_counts(response)
+                kwargs.update(tools=TOOL_DEFINITIONS, tool_choice="required" if required_retry_used and not tool_log else "auto")
+            try:
+                response = client.chat.completions.create(**kwargs)
+            except Exception as exc:
+                status = getattr(exc, "status_code", None)
+                status_code = 503 if status == 429 or "rate" in str(exc).lower() or "quota" in str(exc).lower() else 502
+                raise ModelAPIError("Modelltjenesten kunne ikke fullføre forespørselen.", status_code) from exc
+            prompt_count, completion_count, current_usage_known = _usage_counts(response)
+            usage_known = usage_known and current_usage_known
             prompt_tokens += prompt_count
             completion_tokens += completion_count
             message = response.choices[0].message
             calls = getattr(message, "tool_calls", None) or []
             if not calls:
+                if requires_tool and not tool_log:
+                    required_retry_used = True
+                    messages.append({"role": "assistant", "content": message.content or ""})
+                    messages.append({
+                        "role": "user",
+                        "content": "Dette er en beregningsoppgave. Du må først bruke et relevant SymPy-verktøy med et faktisk tool-call. Ikke gi sluttrespons ennå.",
+                    })
+                    continue
                 final = message.content or ""
                 break
             serialised_calls = []
@@ -131,20 +182,22 @@ def solve_task(oppgave: str) -> dict:
             messages.append({"role": "assistant", "content": message.content, "tool_calls": serialised_calls})
             for call in calls:
                 name = call.function.name
-                tool_log.append(name)
                 try:
                     args = json.loads(call.function.arguments or "{}")
+                    tool_log.append(f"{name}({json.dumps(args, ensure_ascii=False, separators=(',', ':'))})")
                     function = _TOOL_MAP.get(name)
                     if function is None:
                         raise ValueError(f"Ukjent verktøy: {name}")
                     result = function(**args)
                 except Exception as exc:
+                    if not tool_log or not tool_log[-1].startswith(f"{name}("):
+                        tool_log.append(f"{name}({call.function.arguments or '{}'})")
                     result = {"resultat": f"Feil i verktøyet: {exc}", "latex": ""}
                 messages.append({"role": "tool", "tool_call_id": call.id, "content": json.dumps(result, ensure_ascii=False)})
         if not final:
             final = "Modellen fullførte ikke en sluttrespons innen maksimalt antall verktøyrunder."
-    except Exception as exc:
-        final = f"Modellkallet kunne ikke fullføres: {exc}"
+    except ModelAPIError:
+        raise
 
     svar, steps, formula_ids = _normalise_final(final)
     if not steps:
@@ -153,5 +206,11 @@ def solve_task(oppgave: str) -> dict:
         steps.append("Faktiske verktøykall: " + ", ".join(tool_log) + ".")
     else:
         steps.append("Ingen verktøykall ble utført; svaret er ikke verktøyverifisert.")
-    total_tokens = prompt_tokens + completion_tokens
-    return {"svar": svar, "steg": steps, "formler_brukt": _formula_details(formula_ids, steps), "tokens_brukt": total_tokens, "estimert_kostnad": _estimated_cost(prompt_tokens, completion_tokens)}
+    if usage_known:
+        total_tokens = prompt_tokens + completion_tokens
+        tokens = total_tokens
+        cost = _estimated_cost(prompt_tokens, completion_tokens)
+    else:
+        tokens = "ukjent"
+        cost = "ukjent"
+    return {"svar": svar, "steg": steps, "formler_brukt": _formula_details(formula_ids, steps), "tokens_brukt": tokens, "estimert_kostnad": cost}

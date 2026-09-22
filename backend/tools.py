@@ -10,6 +10,7 @@ def _parse(text: str, extra=None):
     text = str(text).strip().replace("^", "**")
     if not text:
         raise ValueError("Uttrykket kan ikke være tomt.")
+    # Gruppens faste tolkning: sin^-1, cos^-1 og tan^-1 betyr inverse funksjoner.
     text = text.replace("sin^-1", "asin").replace("cos^-1", "acos").replace("tan^-1", "atan").replace("j", "I")
     local = {"E": sp.E, "I": sp.I, "pi": sp.pi, "sin": sp.sin, "cos": sp.cos, "tan": sp.tan, "exp": sp.exp, "sqrt": sp.sqrt, "log": sp.log, "asin": sp.asin, "acos": sp.acos, "atan": sp.atan}
     for name in ("x", "y", "t", "z", "a", "b", "c", "n", "theta", "C1", "C2"):
@@ -23,6 +24,8 @@ def _parse(text: str, extra=None):
         raise ValueError(f"Ugyldig matematisk uttrykk: {text}") from exc
 
 def _result(value):
+    if hasattr(value, "has") and value.has(sp.zoo, sp.nan, sp.oo, -sp.oo):
+        raise ValueError("Resultatet er ikke definert.")
     if isinstance(value, sp.MatrixBase):
         return {"resultat": str(value), "latex": sp.latex(value)}
     if isinstance(value, dict):
@@ -37,14 +40,17 @@ def calculate(uttrykk: str) -> dict:
     return _result(sp.simplify(_parse(uttrykk)))
 
 def derive(uttrykk: str, variabel: str = "x") -> dict:
+    """Deriverer uttrykket med hensyn på variabelen."""
     var = sp.Symbol(variabel, real=True)
     return _result(sp.diff(_parse(uttrykk, {variabel: var}), var))
 
 def integrate(uttrykk: str, variabel: str = "x") -> dict:
+    """Integrerer uttrykket med hensyn på variabelen."""
     var = sp.Symbol(variabel, real=True)
     return _result(sp.integrate(_parse(uttrykk, {variabel: var}), var))
 
 def solve_equation(ligning: str, variabel: str = "x") -> dict:
+    """Løser en algebraisk ligning for den valgte variabelen."""
     var = sp.Symbol(variabel, real=True)
     if "=" in ligning:
         left, right = ligning.split("=", 1)
@@ -54,6 +60,7 @@ def solve_equation(ligning: str, variabel: str = "x") -> dict:
     return _result(sp.solve(expression, var))
 
 def solve_ode(ligning: str) -> dict:
+    """Løser en differensialligning med SymPy."""
     x = sp.Symbol("x", real=True)
     y = sp.Function("y")
     local = {"x": x, "y": y}
@@ -65,6 +72,7 @@ def solve_ode(ligning: str) -> dict:
     return _result(sp.dsolve(equation, y(x)))
 
 def matrix_op(operasjon: str, matrise: list) -> dict:
+    """Utfører en støttet operasjon på en matrise."""
     operation = str(operasjon).lower().strip()
     if operation not in ("determinant", "invers", "eigenvalues", "egenverdier", "solve_ax_b"):
         raise ValueError("Støttede matriseoperasjoner: determinant, invers, egenverdier, solve_ax_b.")
@@ -100,6 +108,7 @@ def matrix_op(operasjon: str, matrise: list) -> dict:
     return _result(result)
 
 def complex_op(operasjon: str, tall: str) -> dict:
+    """Utfører en operasjon på et komplekst tall eller uttrykk."""
     operation = str(operasjon).lower().strip()
     if operation not in ("polar", "power", "root", "euler"):
         raise ValueError("Støttede kompleksoperasjoner: polar, power, root, euler.")
