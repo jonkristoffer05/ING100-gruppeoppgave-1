@@ -14,7 +14,7 @@ Skriv `riktig/validert/tokens` i hver resultatkolonne, for eksempel
 
 | # | Oppgave | Modell A + tools | Modell A uten tools | Modell B + tools | Modell B uten tools | Kommentar |
 |---|---------|------------------|----------------------|------------------|----------------------|-----------|
-| 1 |Deriver: f(x) = (x^2 + 1)·si(x)        |                  |                      |                  |                      |           |
+| 1 |Deriver: f(x) = (x^2 + 1)·si(x)        |     ja            |                      |                  |                      |    5909       |
 | 2 |Deriver: f(x) = sin(3x^2)      |                  |                      |                  |                      |           |
 | 3 |Integrer: ∫(3x^2 + 2x - 1) dx        |                  |                      |                  |                      |           |
 | 4 |Integrer: ∫ dx/(x+2)        |                  |                      |                  |                      |           |
