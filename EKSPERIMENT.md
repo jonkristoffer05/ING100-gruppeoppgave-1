@@ -28,9 +28,9 @@ Skriv `riktig/validert/tokens` i hver resultatkolonne, for eksempel
 
 ## Kostnadsberegning
 
-- Totalt tokenforbruk for 10 oppgaver: Model A 66775, uten tools 19113, Model B 104075, uten tools 23780
-- Estimert kostnad: 85425, uten tools 21447
-- Ekstrapolert: 1000 studenter × 50 oppgaver = 4271250000, uten tools 1072325000
+- Totalt tokenforbruk for 10 oppgaver: Gemma med tools: 66 775, Gemma uten tools: 19 113, NVIDIA med tools: 104 075 og NVIDIA uten tools: 23 780.
+- Gjennomsnittlig tokenforbruk per oppgave: 8 542,5 med tools og 2 144,65 uten tools.
+- Ekstrapolert til 1000 studenter med 50 oppgaver hver: ca. 427 125 000 tokens med tools og 107 232 500 tokens uten tools.
 
 ## Observasjoner fra aha-bryterne
 
