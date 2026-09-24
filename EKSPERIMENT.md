@@ -14,10 +14,10 @@ Skriv `riktig/validert/tokens` i hver resultatkolonne, for eksempel
 
 | # | Oppgave | Modell A + tools | Modell A uten tools | Modell B + tools | Modell B uten tools | Kommentar |
 |---|---------|------------------|----------------------|------------------|----------------------|-----------|
-| 1 |Deriver: f(x) = (x^2 + 1)·si(x)        |     ja            |                      |                  |                      |    5909       |
-| 2 |Deriver: f(x) = sin(3x^2)      |                  |                      |                  |                      |           |
-| 3 |Integrer: ∫(3x^2 + 2x - 1) dx        |                  |                      |                  |                      |           |
-| 4 |Integrer: ∫ dx/(x+2)        |                  |                      |                  |                      |           |
+| 1 |Deriver: f(x) = (x^2 + 1)·si(x)        |     ja/ja/5909            |                      |                  |                      |          |
+| 2 |Deriver: f(x) = sin(3x^2)      |      ja/ja/7632            |                      |                  |                      |         |
+| 3 |Integrer: ∫(3x^2 + 2x - 1) dx        |       ja/ja/5088           |                      |                  |                      |           |
+| 4 |Integrer: ∫ dx/(x+2)        |  ja/nei/3473                |                      |                  |                      |           |
 | 5 |Løs ligningssystemet: 2x + 3y = 7, x - y = 1         |                  |                      |                  |                      |           |
 | 6 |Løs differensialligningen: y'' + 2y = 0        |                  |                      |                  |                      |           |
 | 7 |Karakteristisk ligning for y'' - 3y' + 2y = 0        |                  |                      |                  |                      |           |
