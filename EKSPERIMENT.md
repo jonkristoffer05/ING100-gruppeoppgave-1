@@ -14,16 +14,16 @@ Skriv `riktig/validert/tokens` i hver resultatkolonne, for eksempel
 
 | # | Oppgave | Modell A + tools | Modell A uten tools | Modell B + tools | Modell B uten tools | Kommentar |
 |---|---------|------------------|----------------------|------------------|----------------------|-----------|
-| 1 | Deriver f(x) = (x**2 + 1)*sin(x) |                  |                      |                  |                      |           |
-| 2 | Deriver f(x) = sin(3*x**2) |                  |                      |                  |                      |           |
-| 3 | Integrer 3*x**2 + 2*x - 1 |                  |                      |                  |                      |           |
-| 4 | Bevis Pythagoras' læresetning |                  |                      |                  |                      |           |
-| 5 | Løs ligningssystemet 2*x + 3*y = 7 og x - y = 1 |                  |                      |                  |                      |           |
-| 6 | Løs differensialligningen y'' + 2*y = 0 |                  |                      |                  |                      |           |
-| 7 | Beregn sin^-1(0.5) |                  |                      |                  |                      |           |
-| 8 | Regn ut e^(i*pi/2) med Eulers formel |                  |                      |                  |                      |           |
-| 9 | Skriv 1 + i i polarform |                  |                      |                  |                      |           |
-| 10 | Løs A*x=b for A=[[1,1/2,1/3],[1/2,1/3,1/4],[1/3,1/4,1/5]] og b=[1,1,1] |                  |                      |                  |                      |           |
+| 1 |Deriver: f(x) = (x^2 + 1)·si(x)        |                  |                      |                  |                      |           |
+| 2 |Deriver: f(x) = sin(3x^2)      |                  |                      |                  |                      |           |
+| 3 |Integrer: ∫(3x^2 + 2x - 1) dx        |                  |                      |                  |                      |           |
+| 4 |Integrer: ∫ dx/(x+2)        |                  |                      |                  |                      |           |
+| 5 |Løs ligningssystemet: 2x + 3y = 7, x - y = 1         |                  |                      |                  |                      |           |
+| 6 |Løs differensialligningen: y'' + 2y = 0        |                  |                      |                  |                      |           |
+| 7 |Karakteristisk ligning for y'' - 3y' + 2y = 0        |                  |                      |                  |                      |           |
+| 8 |	Regn ut Eulers formel for e^(iπ/2)      |                  |                      |                  |                      |           |
+| 9 |	Skriv 1 + i i polarform       |                  |                      |                  |                      |           |
+| 10 |Løs matriseproblem: A x = b med A = [[1, 1/2, 1/3],[1/2,1/3,1/4],[1/3,1/4,1/5]] og b = [1,1,1]        |                  |                      |                  |                      |           |
 
 ## Kostnadsberegning
 
