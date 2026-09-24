@@ -14,18 +14,6 @@ Skriv `riktig/validert/tokens` i hver resultatkolonne, for eksempel
 
 | # | Oppgave | Modell A + tools | Modell A uten tools | Modell B + tools | Modell B uten tools | Kommentar |
 |---|---------|------------------|----------------------|------------------|----------------------|-----------|
-<<<<<<< HEAD
-| 1 |Deriver: f(x) = (x^2 + 1)·sin(x)        |     ja/ja/5909            |                      |                  |                      |          |
-| 2 |Deriver: f(x) = sin(3x^2)      |      ja/ja/7632            |                      |                  |                      |         |
-| 3 |Integrer: ∫(3x^2 + 2x - 1) dx        |       ja/ja/5088           |                      |                  |                      |           |
-| 4 |Bevis Pythagoras' læresetning        |  ja/nei/3473                |                      |                  |                      |           |
-| 5 |Løs ligningssystemet: 2x + 3y = 7 og x - y = 1         | ja/ja/50105                |                      |                  |                      |           |
-| 6 |Løs differensialligningen: y'' + 2y = 0        | ja/nei/8627                 |                      |                  |                      |           |
-| 7 |Beregn sin^-1(0.5)        |ja/nei/13401                  |                      |                  |                      |           |
-| 8 |	Regn ut e^(iπ/2) med eulers formel    |                  |                      |                  |                      |           |
-| 9 |	Skriv 1 + i i polarform       |   hei               |                      |                  |                      |           |
-| 10 |Løs matriseproblem: A x = b med A = [[1, 1/2, 1/3],[1/2,1/3,1/4],[1/3,1/4,1/5]] og b = [1,1,1]        |                  |                      |                  |                      |           |
-=======
 | 1 |Deriver: f(x) = (x^2 + 1)·sin(x)        |     ja/ja/4308            |      nei/nei/3987                |        ja/ja/5523          |             ja/ja/2480         |    Gemma uten tools returnerte ugyldig JSON.      |
 | 2 |Deriver: f(x) = sin(3x^2)      |      ja/ja/4250            |           ja/ja/1650           |          ja/ja/8166        |           ja/ja/1845           |         |
 | 3 |Integrer: ∫(3x^2 + 2x - 1) dx        |       ja/ja/10633           |            ja/manuell/1674          |        ja/ja/5314          |           ja/ja/1956           |      Gemma uten tools måtte vurderes manuelt.     |
@@ -36,7 +24,7 @@ Skriv `riktig/validert/tokens` i hver resultatkolonne, for eksempel
 | 8 |	Regn ut e^(iπ/2) med eulers formel    |           ja/feil-negativ/4132       |           ja/nei/1550           |           ja/feil-negativ/5303       |           ja/feil-negativ/2740           |      Riktig svar i, men validatoren avviste flere av forsøkene.     |
 | 9 |	Skriv 1 + i i polarform       |         ja/falsk-negativ/4124         |         ja/ja/1572             |         ja/ja/10689         |             ja/ja/1697         |     Gemma med tools fikk falsk negativ på korrekt polarform.      |
 | 10 |Løs matriseproblem: A x = b med A = [[1, 1/2, 1/3],[1/2,1/3,1/4],[1/3,1/4,1/5]] og b = [1,1,1]        |       ja/ja/4558           |          nei/nei/1797            |         nei/nei/26127         |          ja/ja/4202            |      Gemma uten tools svarte feil; NVIDIA med tools endte med ugyldig JSON etter gjentatte verktøykall.     |
->>>>>>> fb0e312 (Dokumenter resultater fra modellforsøk)
+
 
 ## Kostnadsberegning
 
