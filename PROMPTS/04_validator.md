@@ -60,3 +60,21 @@ validate(problem: str, losning: str) -> dict som:
 - [ ] Dere har testet med en løsning dere VET er feil, og sett at
       `validert` faktisk blir `False`.
 - [ ] Kjør `python scripts/selftest.py` – validator-sjekken bør nå vise ✅.
+
+## Faktisk løsning i MatteHjelpen
+
+Validatoren identifiserer oppgavetype før SymPy-parsing og normaliserer `^`,
+desimalkomma, implisitt multiplikasjon og frittstående `i`. Den støtter nå
+derivasjon, ubestemte integraler, beregning/forenkling, én ligning,
+ligningssystemer og enkel polarform for komplekse tall. ODE-svar kontrolleres
+ved å sette løsningen inn og forenkle residualen.
+
+Returformatet er fortsatt `{"validert": bool, "detaljer": str}`. Detaljteksten
+skiller mellom matematisk verifisert, matematisk avvist, ikke automatisk
+verifiserbart og ugyldig format. Bevis og åpne resonnementer får derfor ikke
+status som feil svar, men krever manuell vurdering.
+
+Modellens sluttrespons må være ett JSON-objekt med `svar`, `steg` og
+`formel_ider`. Ved ugyldig JSON sendes én korrigerende melding innenfor den
+eksisterende grensen på maksimalt åtte modellrunder. Rå modelltekst brukes
+ikke som matematisk svar dersom formatet fortsatt er ugyldig.

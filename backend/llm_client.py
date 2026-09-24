@@ -42,7 +42,7 @@ def _parse_final_json(content):
                 parsed, _ = decoder.raw_decode(candidate[start:])
             except (ValueError, json.JSONDecodeError):
                 continue
-        if isinstance(parsed, dict):
+        if isinstance(parsed, dict) and {"svar", "steg", "formel_ider"}.issubset(parsed):
             return parsed
     return None
 
@@ -50,19 +50,15 @@ def _parse_final_json(content):
 def _normalise_final(content):
     parsed = _parse_final_json(content)
     if parsed is None:
-        text = str(content or "").strip()
-        steps = [line.strip(" -*\t") for line in text.splitlines() if line.strip()]
-        if not steps and text:
-            steps = [text]
-        steps.append("Svaret kunne ikke verktøyverifiseres fordi sluttresponsen ikke var gyldig JSON.")
-        return text or "Modellen returnerte ingen lesbar sluttrespons.", steps, []
+        return "Modelltjenesten returnerte et svar i ugyldig format.", [
+            "Svaret kunne ikke behandles fordi sluttresponsen ikke var gyldig JSON."
+        ], []
 
     svar = parsed.get("svar")
     steg = parsed.get("steg")
     formula_ids = parsed.get("formel_ider", [])
     if not isinstance(svar, str) or not isinstance(steg, list) or not all(isinstance(step, str) for step in steg):
-        text = str(content or "").strip()
-        return text or "Modellens JSON manglet gyldig svar eller steg.", [
+        return "Modelltjenesten returnerte et svar i ugyldig format.", [
             "Svaret kunne ikke verktøyverifiseres fordi JSON-feltene svar og steg hadde feil format."
         ], []
     if not isinstance(formula_ids, list):
@@ -138,6 +134,7 @@ def solve_task(oppgave: str) -> dict:
               "Oppgi aldri en formel-ID som ikke er knyttet til et konkret steg. "
               "Knytt hver brukt formel-ID til det konkrete steget der den brukes. Ikke påstå at et verktøy er brukt hvis det ikke faktisk ble kalt. "
               "For bevis, begrepsoppgaver eller tvetydig input skal du forklare tekstlig, men si tydelig at svaret ikke er verktøyverifisert. "
+              "Feltet svar skal alltid bruke enkel SymPy-kompatibel tekstsyntaks, uten LaTeX-kommandoer. LaTeX kan brukes i steg. For polarform skal svar helst være 'r = uttrykk, theta = uttrykk', eller bruke uttrykk*exp(i*vinkel) eller uttrykk*(cos(vinkel) + i*sin(vinkel)). "
               "Den endelige responsen skal være gyldig JSON uten ekstra tekst, med nøyaktig feltene svar (string), steg (liste med strings) og formel_ider (liste med gyldige ID-strenger).\n\n"
               "Formelsamling:\n" + _formula_context())
     messages = [{"role": "system", "content": prompt}, {"role": "user", "content": oppgave}]
@@ -147,6 +144,7 @@ def solve_task(oppgave: str) -> dict:
     tool_log = []
     requires_tool = USE_TOOLS and _looks_like_calculation_task(oppgave)
     required_retry_used = False
+    json_retry_used = False
     final = ""
     try:
         for _ in range(_MAX_TOOL_ROUNDS):
@@ -174,7 +172,16 @@ def solve_task(oppgave: str) -> dict:
                         "content": "Dette er en beregningsoppgave. Du må først bruke et relevant SymPy-verktøy med et faktisk tool-call. Ikke gi sluttrespons ennå.",
                     })
                     continue
-                final = message.content or ""
+                candidate = message.content or ""
+                if _parse_final_json(candidate) is None and not json_retry_used:
+                    json_retry_used = True
+                    messages.append({"role": "assistant", "content": candidate})
+                    messages.append({
+                        "role": "user",
+                        "content": "Returner kun ett gyldig JSON-objekt med doble anførselstegn og feltene svar, steg og formel_ider. Ingen Markdown eller tekst rundt.",
+                    })
+                    continue
+                final = candidate
                 break
             serialised_calls = []
             for call in calls:

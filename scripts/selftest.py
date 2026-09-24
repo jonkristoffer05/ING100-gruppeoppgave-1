@@ -85,6 +85,49 @@ def check_validator():
     return OK, f"OK – validert={resultat['validert']!r}"
 
 
+def check_validator_examples():
+    from backend.validator import validate
+
+    cases = [
+        ("Deriver x**3 + 2*x", "3*x**2 + 2", True),
+        ("Deriver f(x)=sin(x)", "cos(x)", True),
+        ("Deriver exp(3*x)", "3*exp(3*x)", True),
+        ("Integrer 3*x**2 + 2*x - 1", "x**3 + x**2 - x + C", True),
+        ("Beregn 7-5", "2", True),
+        ("Forenkle (x**2-1)/(x-1)", "x+1", True),
+        ("Løs 3.5*x + 4 = 12", "x=16/7", True),
+        ("Løs x**2-4=0", "[-2, 2]", True),
+        ("Løs systemet 2*x+3*y=7 og x-y=1", "x=2, y=1", True),
+        ("Skriv 1+i i polarform", "r=sqrt(2), theta=pi/4", True),
+        ("Skriv 1+i i polarform", "sqrt(2)*(cos(pi/4)+i*sin(pi/4))", True),
+        ("Skriv 1+i i polarform", "sqrt(2)*exp(i*pi/4)", True),
+        ("Skriv 1+i i polarform", "1+i = sqrt(2)*(cos(pi/4)+i*sin(pi/4)) = sqrt(2)*exp(i*pi/4)", True),
+        ("Skriv 1+i i polarform", r"\sqrt{2}\left(\cos\frac{\pi}{4}+i\sin\frac{\pi}{4}\right)", True),
+        ("Skriv 1+i i polarform", r"\sqrt{2}e^{i\frac{\pi}{4}}", True),
+        ("Skriv -1+i i polarform", "r=sqrt(2), theta=3*pi/4", True),
+        ("Skriv 2-2*i i polarform", "2*sqrt(2)*exp(-i*pi/4)", True),
+        ("Deriver x**3", "2*x", False),
+        ("Integrer 3*x**2", "x**2", False),
+        ("Løs x**2-4=0", "[2]", False),
+        ("Løs systemet 2*x+3*y=7 og x-y=1", "x=1, y=1", False),
+        ("Skriv 1+i i polarform", "r=1, theta=pi/4", False),
+        ("Skriv 1+i i polarform", "sqrt(2)*exp(i*pi/2)", False),
+        ("Løs ODE y'' + 2*y = 0", "y(x) = C1*cos(sqrt(2)*x) + C2*sin(sqrt(2)*x)", True),
+        ("Løs ODE y' + 4*y = 0", "y(x) = C1*exp(-4*x)", True),
+        ("Løs differensialligningen y' = y", "y = C1*exp(x)", True),
+        ("Løs ODE y'' + 2*y = 0", "y(x) = C1*cos(x) + C2*sin(x)", False),
+        ("Løs ODE y' + 4*y = 0", "y(x) = C1*exp(4*x)", False),
+    ]
+    for problem, answer, expected in cases:
+        result = validate(problem, answer)
+        if result.get("validert") is not expected:
+            return FEIL, f"Uventet validering for {problem!r}: {result}"
+    manual = validate("Bevis Pythagoras' læresetning", "Et bevis")
+    if manual.get("validert") or "manuell vurdering" not in manual.get("detaljer", ""):
+        return FEIL, f"Bevisoppgaven fikk feil status: {manual}"
+    return OK, f"{len(cases)} riktige/feilaktige eksempler og én manuell oppgave."
+
+
 def check_llm_client():
     from backend import llm_client
 
@@ -157,6 +200,7 @@ def main():
     check("tools.complex_op", check_tool("complex_op", "polar", "1+1j"))
     check("tools.TOOL_DEFINITIONS", check_tool_definitions)
     check("validator.validate", check_validator)
+    check("validator-eksempler", check_validator_examples)
     check("llm_client.solve_task (finnes)", check_llm_client)
     check("API-kontrakt: POST /solve", check_api_contract)
 

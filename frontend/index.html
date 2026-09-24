@@ -91,9 +91,10 @@
     ol, ul { margin: 0; padding-left: 1.4rem; }
     li { margin-bottom: 0.6rem; line-height: 1.5; }
     li:last-child { margin-bottom: 0; }
-    .validert-ok, .validert-feil { margin: 0; font-weight: 700; }
+    .validert-ok, .validert-feil, .validert-manual, .validert-teknisk { margin: 0; font-weight: 700; }
     .validert-ok { color: var(--green); background: var(--green-soft); border-color: #b9e5ca; }
     .validert-feil { color: var(--orange); background: var(--orange-soft); border-color: #f0cca4; }
+    .validert-manual, .validert-teknisk { color: var(--muted); background: #f2f5f8; }
     .kostnad { margin: 0; color: var(--muted); font-size: 0.95rem; }
 
     @media (max-width: 600px) {
@@ -156,6 +157,11 @@
         if (!res.ok) {
           document.getElementById('resultat').style.display = 'block';
           document.getElementById('svar').textContent = data.svar || 'Forespørselen kunne ikke behandles.';
+          const validering = document.getElementById('validering');
+          if ((data.svar || '').toLowerCase().includes('ugyldig')) {
+            validering.textContent = 'Valideringen kunne ikke gjennomføres på grunn av ugyldig format';
+            validering.className = 'validert-teknisk result-card';
+          }
           status.className = 'error';
           status.textContent = data.svar || 'Noe gikk galt. Prøv igjen.';
           return;
@@ -168,8 +174,21 @@
         document.getElementById('formler').innerHTML =
           data.formler_brukt.map(f => `<li>${f}</li>`).join('');
         const v = document.getElementById('validering');
-        v.textContent = data.validert ? '✅ Svaret er numerisk validert' : '❌ Svaret kunne IKKE valideres – stol ikke blindt på det!';
-        v.className = data.validert ? 'validert-ok result-card' : 'validert-feil result-card';
+        const valideringsdetaljer = (data.steg || []).join(' ').toLowerCase();
+        let statusTekst = 'Svaret ble kontrollert, men stemmer ikke';
+        let statusKlasse = 'validert-feil';
+        if (data.validert) {
+          statusTekst = 'Svaret er matematisk verifisert';
+          statusKlasse = 'validert-ok';
+        } else if (valideringsdetaljer.includes('manuell') || valideringsdetaljer.includes('ikke kan verifiseres automatisk')) {
+          statusTekst = 'Svaret kunne ikke verifiseres automatisk – vurder manuelt';
+          statusKlasse = 'validert-manual';
+        } else if (valideringsdetaljer.includes('ugyldig format') || valideringsdetaljer.includes('ugyldig json')) {
+          statusTekst = 'Valideringen kunne ikke gjennomføres på grunn av ugyldig format';
+          statusKlasse = 'validert-teknisk';
+        }
+        v.textContent = statusTekst;
+        v.className = `${statusKlasse} result-card`;
         document.getElementById('kostnad').textContent =
           `Tokens brukt: ${data.tokens_brukt} · Estimert kostnad: $${data.estimert_kostnad}`;
         status.textContent = 'Svar klart.';
