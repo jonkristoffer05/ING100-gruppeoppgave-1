@@ -22,7 +22,7 @@ Skriv `riktig/validert/tokens` i hver resultatkolonne, for eksempel
 | 6 |Løs differensialligningen: y'' + 2y = 0        | ja/nei/8627                 |                      |                  |                      |           |
 | 7 |Beregn sin^-1(0.5)        |ja/nei/13401                  |                      |                  |                      |           |
 | 8 |	Regn ut e^(iπ/2) med eulers formel    |                  |                      |                  |                      |           |
-| 9 |	Skriv 1 + i i polarform       |                  |                      |                  |                      |           |
+| 9 |	Skriv 1 + i i polarform       |   hei               |                      |                  |                      |           |
 | 10 |Løs matriseproblem: A x = b med A = [[1, 1/2, 1/3],[1/2,1/3,1/4],[1/3,1/4,1/5]] og b = [1,1,1]        |                  |                      |                  |                      |           |
 
 ## Kostnadsberegning
