@@ -99,12 +99,12 @@ Spørsmål dere skal besvare:
 Dere leverer **lenke til gruppens GitHub-repo** (ikke zip-fil, ikke kode limt
 inn andre steder). Repoet skal på innleveringstidspunktet inneholde:
 
-- [ ] Fungerende app: `python scripts/selftest.py --strict` viser ingen ❌ og
+- [x] Fungerende app: `python scripts/selftest.py --strict` viser ingen ❌ og
   ingen ⏳.
-- [ ] Reell commit-historikk fra alle gruppemedlemmer (`git log`) – ikke ett
+- [x] Reell commit-historikk fra alle gruppemedlemmer (`git log`) – ikke ett
       stort commit limt inn til slutt.
-- [ ] Utfylt eksperimenttabell og observasjoner i `EKSPERIMENT.md` (Del B).
-- [ ] Refleksjonsnotat (Del C) lastet opp som PDF i den samme innleveringen
+- [x] Utfylt eksperimenttabell og observasjoner i `EKSPERIMENT.md` (Del B).
+- [x] Refleksjonsnotat (Del C) lastet opp som PDF i den samme innleveringen
       (Canvas/Inspera – se emnesiden), 2–3 sider.
 
 Se `EVALUERING.md` for nøyaktig hva læreren ser etter i hver del – bruk den
